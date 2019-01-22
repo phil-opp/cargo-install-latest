@@ -129,7 +129,7 @@ authors = [""]
                 .insert(crate_name.clone(), String::from(version))
                 .is_some()
             {
-                writeln!(stderr(), "Warning: package {} is present multiple times in dummy Cargo.lock. Choosing version {}.", crate_name, version);
+                writeln!(stderr(), "Warning: package {} is present multiple times in dummy Cargo.lock. Choosing version {}.", crate_name, version).expect("failed to write to stderr");
             }
         }
         Ok(latest_versions)
@@ -214,7 +214,7 @@ impl Crate {
                     stderr(),
                     "Warning: Git binaries are not supported. Ignoring `{}`.",
                     name
-                );
+                ).expect("failed to write to stderr");
                 Ok(None)
             } else {
                 // local dependency
@@ -222,7 +222,7 @@ impl Crate {
                     stderr(),
                     "Warning: Local binaries are not supported. Ignoring `{}`.",
                     name
-                );
+                ).expect("failed to write to stderr");
                 Ok(None)
             }
         }

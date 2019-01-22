@@ -1,14 +1,13 @@
 use std::io::{stderr, Write};
+use std::env;
 
-extern crate cargo_update_installed;
-
-use cargo_update_installed::*;
+use cargo_install_latest::*;
 
 fn main() {
     match run() {
         Ok(()) => {}
         Err(err) => {
-            writeln!(stderr(), "Error: {}", err);
+            writeln!(stderr(), "Error: {}", err).expect("failed to write to stderr");
         }
     };
 }
@@ -16,58 +15,54 @@ fn main() {
 fn run() -> Result<(), String> {
     use std::collections::HashMap;
 
-    let installed_crates = installed_crates()?;
     let mut required_crates = HashMap::new();
-    for c in installed_crates.values() {
-        if required_crates.contains_key(&c.name) {
-            println!("Ignoring duplicate installed crate: {:?}", c);
-            continue;
-        }
-
-        let mut required_crate = c.clone();
-        // require latest version with no constraints
-        required_crate.version = "*".into();
-        if required_crates
-            .insert(c.name.clone(), required_crate)
-            .is_some()
-        {
-            unreachable!("duplicate key");
-        }
+    for crate_name in env::args().skip(2) {
+        let required_crate = Crate {
+            name: crate_name.clone(),
+            version: "*".into(),
+            kind: CrateKind::CratesIo,
+        };
+        required_crates.insert(crate_name, required_crate);
     }
 
     let latest_versions = get_latest_versions(&required_crates)?;
+    
+    let installed_crates = installed_crates()?;
 
     let mut updates = Vec::new();
-    for c in installed_crates.values() {
-        let latest_version = latest_versions
-            .get(&c.name)
-            .ok_or(format!("Error: No latest version found for {}", c.name))?;
-        if &c.version != latest_version {
-            updates.push((c, latest_version));
+    for crate_name in required_crates.keys() {
+        let installed_version = installed_crates.get(crate_name).map(|c| c.version.clone());
+        let latest_version = latest_versions.get(crate_name).ok_or(format!("Crate `{}` not found", crate_name))?;
+        if installed_version.as_ref() == Some(latest_version) {
+            println!("Up to date: {} {}", crate_name, latest_version);
         } else {
-            println!("Up to date: {} {}", c.name, c.version);
+            updates.push((crate_name, installed_version, latest_version));
         }
     }
-    updates.sort_unstable_by_key(|(c, _)| &c.name);
 
     if updates.len() > 1 {
-        println!("\nThe following updates will be performed:");
-        for (_crate, latest_version) in &updates {
-            println!("    {} from {} to {}", _crate.name, _crate.version, latest_version);
+        println!("\nThe following crates will be installed or updated:");
+        for (crate_name, installed_version, latest_version) in &updates {
+            if let Some(installed_version) = installed_version {
+                println!("    Update {} from {} to {}", crate_name, installed_version, latest_version);
+            } else {
+                println!("    Install {} {}", crate_name, latest_version);
+            }
         }
     }
 
-    for (_crate, latest_version) in &updates {
-        println!(
-            "\nUpdating {} from {} to {}",
-            _crate.name, _crate.version, latest_version
-        );
-        if !install_update(&_crate.name, latest_version)?.success() {
+    for (crate_name, installed_version, latest_version) in &updates {
+        if let Some(installed_version) = installed_version {
+            println!("\nUpdating {} from {} to {}", crate_name, installed_version, latest_version);
+        } else {
+            println!("\nInstalling {} {}", crate_name, latest_version);
+        }
+        if !install_update(&crate_name, latest_version)?.success() {
             return Err("Error: `cargo install` failed".into());
         }
     }
 
-    println!("\nAll packages up to date.");
+    println!("\nAll crates installed and up to date.");
 
     Ok(())
 }

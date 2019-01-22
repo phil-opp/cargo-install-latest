@@ -1,10 +1,11 @@
 [package]
-name = "cargo-update-installed"
-version = "0.1.2"
+name = "cargo-install-latest"
+version = "0.1.0"
 authors = ["Philipp Oppermann <dev@phil-opp.com>"]
 license = "MIT OR Apache-2.0"
-description = "A small tool to update crates installed through `cargo install`"
-repository = "https://github.com/phil-opp/cargo-update-installed"
+description = "Ensure that the latest version of all specified crates is installed, update them otherwise."
+repository = "https://github.com/phil-opp/cargo-install-latest"
+edition = "2018"
 
 [dependencies]
 tempdir = "0.3.7"
