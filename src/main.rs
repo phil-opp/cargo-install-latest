@@ -15,8 +15,12 @@ fn main() {
 fn run() -> Result<(), String> {
     use std::collections::HashMap;
 
+    let mut args = env::args();
+    assert!(args.next().is_some());
+    assert_eq!(args.next(), Some("install-latest".into()));
+
     let mut required_crates = HashMap::new();
-    for crate_name in env::args().skip(2) {
+    for crate_name in args {
         let required_crate = Crate {
             name: crate_name.clone(),
             version: "*".into(),
