@@ -1,5 +1,5 @@
-use std::io::{stderr, Write};
 use std::env;
+use std::io::{stderr, Write};
 
 use cargo_install_latest::*;
 
@@ -26,13 +26,15 @@ fn run() -> Result<(), String> {
     }
 
     let latest_versions = get_latest_versions(&required_crates)?;
-    
+
     let installed_crates = installed_crates()?;
 
     let mut updates = Vec::new();
     for crate_name in required_crates.keys() {
         let installed_version = installed_crates.get(crate_name).map(|c| c.version.clone());
-        let latest_version = latest_versions.get(crate_name).ok_or(format!("Crate `{}` not found", crate_name))?;
+        let latest_version = latest_versions
+            .get(crate_name)
+            .ok_or(format!("Crate `{}` not found", crate_name))?;
         if installed_version.as_ref() == Some(latest_version) {
             println!("Up to date: {} {}", crate_name, latest_version);
         } else {
@@ -44,7 +46,10 @@ fn run() -> Result<(), String> {
         println!("\nThe following crates will be installed or updated:");
         for (crate_name, installed_version, latest_version) in &updates {
             if let Some(installed_version) = installed_version {
-                println!("    Update {} from {} to {}", crate_name, installed_version, latest_version);
+                println!(
+                    "    Update {} from {} to {}",
+                    crate_name, installed_version, latest_version
+                );
             } else {
                 println!("    Install {} {}", crate_name, latest_version);
             }
@@ -53,7 +58,10 @@ fn run() -> Result<(), String> {
 
     for (crate_name, installed_version, latest_version) in &updates {
         if let Some(installed_version) = installed_version {
-            println!("\nUpdating {} from {} to {}", crate_name, installed_version, latest_version);
+            println!(
+                "\nUpdating {} from {} to {}",
+                crate_name, installed_version, latest_version
+            );
         } else {
             println!("\nInstalling {} {}", crate_name, latest_version);
         }

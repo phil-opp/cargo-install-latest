@@ -165,12 +165,12 @@ pub struct Crate {
 pub enum CrateKind {
     CratesIo,
     /*
-    Git {
-        url: String,
-        branch: Option<String>,
-    },
-    Local,
-*/
+        Git {
+            url: String,
+            branch: Option<String>,
+        },
+        Local,
+    */
 }
 
 impl Crate {
@@ -214,7 +214,8 @@ impl Crate {
                     stderr(),
                     "Warning: Git binaries are not supported. Ignoring `{}`.",
                     name
-                ).expect("failed to write to stderr");
+                )
+                .expect("failed to write to stderr");
                 Ok(None)
             } else {
                 // local dependency
@@ -222,7 +223,8 @@ impl Crate {
                     stderr(),
                     "Warning: Local binaries are not supported. Ignoring `{}`.",
                     name
-                ).expect("failed to write to stderr");
+                )
+                .expect("failed to write to stderr");
                 Ok(None)
             }
         }
